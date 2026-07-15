@@ -1,9 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
 import os
+
+from app.database.database import get_db
+from app.models.analysis import AnalysisHistory
 
 from app.schemas.request import WebsiteRequest
 from app.schemas.response import SEOResponse
+
 from app.services.analyzer import fetch_website
 from app.services.scoring import calculate_seo_score
 from app.services.screenshot import capture_screenshot
@@ -13,7 +18,10 @@ router = APIRouter()
 
 
 @router.post("/analyze", response_model=SEOResponse)
-def analyze_website(data: WebsiteRequest):
+def analyze_website(
+    data: WebsiteRequest,
+    db: Session = Depends(get_db)
+):
 
     # Fetch website data
     result = fetch_website(data.url)
@@ -41,6 +49,25 @@ def analyze_website(data: WebsiteRequest):
     # Generate PDF
     generate_pdf(result, screenshot_path)
 
+    # -----------------------------
+    # Save analysis to PostgreSQL
+    # -----------------------------
+    #history = AnalysisHistory(
+    #    user_id=1,   # Temporary user
+    #   website_url=data.url,
+    #    seo_score=score_result["seo_score"],
+    #   title=result["title"],
+    #    description=result["description"],
+    #    screenshot=screenshot_url,
+    #)
+
+    #db.add(history)
+    #db.commit()
+    #db.refresh(history)
+
+    # -----------------------------
+    # Return Response
+    # -----------------------------
     return SEOResponse(
         message="Website analyzed successfully",
 
@@ -88,7 +115,7 @@ def analyze_website(data: WebsiteRequest):
         seo_score=score_result["seo_score"],
         checks=score_result["checks"],
         recommendations=score_result["recommendations"],
-        
+
         html_length=len(result["html"])
     )
 

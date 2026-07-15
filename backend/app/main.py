@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.models.user import User
+from app.models.analysis import AnalysisHistory
 from app.routers.health import router as health_router
 from app.routers.analyze import router as analyze_router
 from app.routers.user import router as user_router
